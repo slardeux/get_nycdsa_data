@@ -33,32 +33,37 @@ get_txt.f <- function(links, folder){
 }
 
 ## main
-baseurl <- 'http://www.nycdatascience.com/slides/BOOTCAMP'
-week <- 'week6'
-lec <- 'lec1'
-folder <- 'classdata'
-dir.create(file.path(folder), showWarnings = FALSE)
-
-links <- get_url.f(baseurl, rmv = 1, week, lec, 'data/' )
-if(any(grepl('csv', links))) get_csv.f(links, folder)
-if(any(grepl('txt', links))) get_txt.f(links, folder)
-
-if(any(substring(links, nchar(links)) == '/')){
-  lk <- links[which(substring(links, nchar(links)) == '/')]
-  while(any(substring(lk, nchar(lk)) == '/')){
-      lk <- lk[which(substring(lk, nchar(lk)) == '/')]
-    for(i in 1:length(lk)){
-      newlk <- get_url.f(lk[i], rmv = 1)
-      subfolder <- paste(folder, strsplit(lk, '/')[[i]][length(strsplit(lk, '/')[[i]])], sep = '/')
-      dir.create(file.path(subfolder), showWarnings = FALSE)
-      if(any(grepl('csv', newlk))) get_csv.f(newlk, subfolder)
-      if(any(grepl('txt', newlk))) get_txt.f(newlk, subfolder)
+get_all_data.f <- function(baseurl, folder, rmv = 0, ...){
+  dir.create(file.path(folder), showWarnings = FALSE)
+  
+  links <- get_url.f(baseurl, rmv = 1,...)
+  if(any(grepl('csv', links))) get_csv.f(links, folder)
+  if(any(grepl('txt', links))) get_txt.f(links, folder)
+  
+  if(any(substring(links, nchar(links)) == '/')){
+    lk <- links[which(substring(links, nchar(links)) == '/')]
+    while(any(substring(lk, nchar(lk)) == '/')){
+        lk <- lk[which(substring(lk, nchar(lk)) == '/')]
+      for(i in 1:length(lk)){
+        newlk <- get_url.f(lk[i], rmv = 1)
+        subfolder <- paste(folder, strsplit(lk, '/')[[i]][length(strsplit(lk, '/')[[i]])], sep = '/')
+        dir.create(file.path(subfolder), showWarnings = FALSE)
+        if(any(grepl('csv', newlk))) get_csv.f(newlk, subfolder)
+        if(any(grepl('txt', newlk))) get_txt.f(newlk, subfolder)
+      }
+      lk <- newlk
+      folder <- subfolder
     }
-    lk <- newlk
-    folder <- subfolder
   }
 }
 
+baseurl <- 'http://www.nycdatascience.com/slides/BOOTCAMP'
+folder <- 'classdata'
 
-
-
+for(i in 1:6){
+  week <- paste0('week', i)
+  for(j in 1:6){
+    lec <- paste0('lec', j)
+    try(get_all_data.f(baseurl, folder, rmv = 1, week, lec, 'data/'), silent = TRUE)
+  }
+}
